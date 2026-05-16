@@ -1,1 +1,75 @@
-PLACEHOLDER_FOR_FULL_HTML_CONTENT
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OutLove • Социальная сеть знакомств</title>
+    
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#c026d3">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-[#0a0a0f] text-white">
+
+    <!-- AUTH SCREEN -->
+    <div id="auth-screen" class="max-w-md mx-auto min-h-screen flex flex-col justify-center px-6">
+        <div class="text-center mb-10">
+            <div class="mb-8">
+                <h1 class="logo-font text-7xl font-extrabold tracking-[-3px] relative inline-block bg-gradient-to-r from-white via-zinc-100 to-white bg-clip-text text-transparent">
+                    OutLove
+                </h1>
+                <div class="h-1 w-24 mx-auto mt-2 bg-gradient-to-r from-purple-600 via-pink-500 to-violet-600 rounded-full"></div>
+            </div>
+        </div>
+
+        <div class="glass p-7 rounded-3xl mb-8">
+            <div class="space-y-4">
+                <button onclick="simulateLogin()" class="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl font-semibold">Войти</button>
+                <button onclick="showRegistrationForm()" class="w-full py-4 border border-white/30 rounded-2xl font-semibold">Создать новый аккаунт</button>
+            </div>
+        </div>
+
+        <div class="flex gap-x-3">
+            <button onclick="socialLogin('vk')" class="flex-1 py-3.5 bg-[#0077FF] rounded-2xl font-medium text-sm">ВКонтакте</button>
+            <button onclick="socialLogin('yandex')" class="flex-1 py-3.5 bg-[#FF0000] text-white rounded-2xl font-medium text-sm">Яндекс</button>
+            <button onclick="socialLogin('mail')" class="flex-1 py-3.5 bg-[#FFCC00] text-black rounded-2xl font-medium text-sm">Mail.ru</button>
+        </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div id="main-app" class="hidden max-w-md mx-auto min-h-screen">
+        <div class="sticky top-0 z-50 bg-[#0a0a0f]/95 backdrop-blur-xl border-b border-white/10 px-5 py-4 flex items-center">
+            <div onclick="openSideMenu()" class="cursor-pointer">
+                <div class="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 p-0.5 ring-2 ring-purple-400 ring-offset-2 ring-offset-[#0a0a0f]">
+                    <img id="profile-avatar" src="https://picsum.photos/id/64/32/32" class="w-full h-full rounded-full object-cover">
+                </div>
+            </div>
+            <div class="flex-1 text-center">
+                <span class="logo-font text-4xl font-bold tracking-tighter">OutLove</span>
+            </div>
+            <div onclick="showNotifications()" class="relative cursor-pointer">
+                <i class="fa-solid fa-bell text-2xl"></i>
+            </div>
+        </div>
+
+        <div id="main-content" class="max-w-md mx-auto pb-20"></div>
+
+        <div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#0a0a0f] border-t border-white/10 py-2">
+            <div class="flex justify-around text-xs">
+                <div onclick="switchTab('feed')" class="tab-btn flex flex-col items-center cursor-pointer" data-tab="feed"><i class="fa-solid fa-home text-2xl"></i><span class="mt-1">Лента</span></div>
+                <div onclick="switchTab('search')" class="tab-btn flex flex-col items-center cursor-pointer" data-tab="search"><i class="fa-solid fa-search text-2xl"></i><span class="mt-1">Поиск</span></div>
+                <div onclick="switchTab('messages')" class="tab-btn flex flex-col items-center cursor-pointer" data-tab="messages"><i class="fa-solid fa-comments text-2xl"></i><span class="mt-1">Чат</span></div>
+                <div onclick="switchTab('music')" class="tab-btn flex flex-col items-center cursor-pointer" data-tab="music"><i class="fa-solid fa-music text-2xl"></i><span class="mt-1">Музыка</span></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+/* OutLove Styles - Modular */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
+
+body { 
+    font-family: 'Inter', system-ui, sans-serif; 
+    background: 
+        radial-gradient(circle at 30% 20%, rgba(192, 38, 211, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 70% 80%, rgba(236, 72, 153, 0.06) 0%, transparent 50%),
+        #0a0a0f;
+}
+
+button {
+    border-radius: 9999px !important;
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+    font-size: 0.875rem !important;
+}
+
+.logo-font { font-family: 'Space Grotesk', system-ui, sans-serif; }
+
+.glass { 
+    background: rgba(255, 255, 255, 0.08); 
+    backdrop-filter: blur(28px); 
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* Add more styles from original as needed */

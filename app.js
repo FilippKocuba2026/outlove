@@ -1,47 +1,33 @@
 // OutLove - Modular App Logic (dev branch)
-// Шаг 2: Свайп-карточки + лайки/матчи
+// Шаг 3: Чат + AI Love Coach
 
-console.log('%c[OutLove] Modular version with Swipes loaded', 'color:#22c55e');
+console.log('%c[OutLove] Chat + AI Coach loaded', 'color:#22c55e');
 
-// === Глобальные данные ===
-let currentUser = JSON.parse(localStorage.getItem('currentUser')) || {
-    name: "Ты", age: 28, city: "Москва", gender: "Мужской",
-    avatar: "https://picsum.photos/id/64/32/32", incognito: false
-};
-
+let currentUser = JSON.parse(localStorage.getItem('currentUser')) || { name: "Ты", age: 28, city: "Москва", avatar: "https://picsum.photos/id/64/32/32" };
 let likes = JSON.parse(localStorage.getItem('likes')) || [];
 let matches = JSON.parse(localStorage.getItem('matches')) || [];
 let currentSwipeIndex = 0;
-let filteredUsers = [];
+let fakeUsers = [
+    { id: 1, name: "Анна Морозова", age: 26, city: "Москва", distance: 3, photo: "https://picsum.photos/id/64/400/500", bio: "Люблю путешествия и кофе", interests: ["путешествия"], zodiac: "Лев", online: true },
+    { id: 2, name: "Дмитрий Соколов", age: 29, city: "Спб", distance: 12, photo: "https://picsum.photos/id/65/400/500", bio: "Программист и гитарист", interests: ["музыка"], zodiac: "Скорпион", online: false }
+];
 let chatMessages = JSON.parse(localStorage.getItem('chatMessages')) || {};
 let currentChatUser = null;
 let aiConversation = JSON.parse(localStorage.getItem('aiConversation')) || [];
-
-// Тестовые пользователи для свайпов
-let fakeUsers = [
-    { id: 1, name: "Анна Морозова", age: 26, city: "Москва", distance: 3, photo: "https://picsum.photos/id/64/400/500", bio: "Люблю путешествия, кофе и хорошие разговоры", interests: ["путешествия", "фотография", "йога"], zodiac: "Лев", online: true },
-    { id: 2, name: "Дмитрий Соколов", age: 29, city: "Санкт-Петербург", distance: 12, photo: "https://picsum.photos/id/65/400/500", bio: "Программист, гитарист", interests: ["музыка", "программирование"], zodiac: "Скорпион", online: false },
-    { id: 3, name: "София Волкова", age: 24, city: "Москва", distance: 7, photo: "https://picsum.photos/id/66/400/500", bio: "Художница. Ищу вдохновение", interests: ["искuсство", "кино"], zodiac: "Рыбы", online: true }
-];
 
 function saveData() {
     localStorage.setItem('currentUser', JSON.stringify(currentUser));
     localStorage.setItem('likes', JSON.stringify(likes));
     localStorage.setItem('matches', JSON.stringify(matches));
     localStorage.setItem('chatMessages', JSON.stringify(chatMessages));
+    localStorage.setItem('aiConversation', JSON.stringify(aiConversation));
 }
 
 function updateProfileUI() {
     const avatar = document.getElementById('profile-avatar');
-    if (avatar) avatar.src = currentUser.avatar || 'https://picsum.photos/id/64/32/32';
+    if (avatar) avatar.src = currentUser.avatar;
 }
 
-// === Вход и регистрация ===
-function simulateLogin() { /* ... оставляем как было ... */ }
-function showRegistrationForm() { /* ... */ }
-function completeRegistration() { /* ... */ }
-
-// === Переключение вкладок ===
 function switchTab(tab) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('nav-active'));
     const active = document.querySelector(`[data-tab="${tab}"]`);
@@ -55,149 +41,111 @@ function renderContent(tab) {
     container.innerHTML = '';
 
     if (tab === 'feed') {
-        container.innerHTML = `<div class="px-5 pt-4"><h2 class="text-2xl font-semibold mb-4">Лента</h2><div class="glass rounded-3xl p-5">...</div></div>`;
-    } 
-    else if (tab === 'search') {
-        container.innerHTML = `
-            <div class="px-5 pt-6">
-                <div class="flex justify-between items-center mb-4">
-                    <button onclick="sortByCompatibility()" class="px-3.5 py-1.5 bg-white/10 rounded-2xl text-xs flex items-center gap-1.5">
-                        <i class="fa-solid fa-robot text-purple-400"></i> <span>AI-Поиск</span>
-                    </button>
-                </div>
-                <div id="swipe-container" class="relative h-[460px] flex justify-center mt-4"></div>
-                
-                <div class="flex justify-center gap-8 mt-6">
-                    <button onclick="passUser()" class="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center text-3xl">
-                        <i class="fa-solid fa-times"></i>
-                    </button>
-                    <button onclick="likeUser()" class="w-16 h-16 bg-gradient-to-br from-pink-500 to-red-500 rounded-full flex items-center justify-center text-3xl text-white">
-                        <i class="fa-solid fa-heart"></i>
-                    </button>
-                </div>
-            </div>`;
+        container.innerHTML = `<div class="px-5 pt-4"><h2 class="text-2xl font-semibold mb-4">Лента</h2></div>`;
+    } else if (tab === 'search') {
+        container.innerHTML = `<div class="px-5 pt-6"><div id="swipe-container" class="relative h-[460px]"></div></div>`;
         setTimeout(() => renderSwipeCards(), 100);
-    } 
-    else if (tab === 'messages') {
-        container.innerHTML = `<div class="px-5 pt-6"><h2 class="text-2xl font-semibold mb-4">Чаты</h2></div>`;
+    } else if (tab === 'messages') {
+        renderMessagesList(container);
     }
 }
 
-// === Свайп-карточки ===
-function renderSwipeCards() {
-    const container = document.getElementById('swipe-container');
-    if (!container) return;
-    container.innerHTML = '';
-
-    if (currentSwipeIndex >= fakeUsers.length) currentSwipeIndex = 0;
-    const user = fakeUsers[currentSwipeIndex];
-    if (!user) return;
-
-    const card = document.createElement('div');
-    card.className = `swipe-card absolute w-full max-w-[340px] bg-[#12121a] rounded-3xl overflow-hidden cursor-grab`;
-    card.innerHTML = `
-        <div class="relative h-[420px]">
-            <img src="${user.photo}" class="w-full h-full object-cover">
-            <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 h-2/3"></div>
-            <div class="absolute bottom-0 left-0 right-0 p-5 text-white">
-                <div class="flex items-end justify-between">
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <span class="text-3xl font-bold">${user.name}</span>
-                            <span class="text-2xl text-white/80">${user.age}</span>
-                        </div>
-                        <div class="text-sm text-white/70">${user.city} • ${user.distance} км</div>
-                    </div>
-                </div>
-                <div class="mt-3 text-sm text-white/80">${user.bio}</div>
-            </div>
-        </div>
-    `;
-
-    // Простая свайп-логика
-    let startX = 0;
-    card.addEventListener('mousedown', e => startX = e.clientX);
-    card.addEventListener('mouseup', e => {
-        const diff = e.clientX - startX;
-        if (diff > 80) likeUser();
-        else if (diff < -80) passUser();
-        else renderSwipeCards();
+// === ЧАТ ===
+function renderMessagesList(container) {
+    if (matches.length === 0) {
+        container.innerHTML = `<div class="px-5 pt-8 text-center"><i class="fa-solid fa-comments text-6xl text-zinc-700 mb-4"></i><h3 class="text-xl">Пока нет матчей</h3></div>`;
+        return;
+    }
+    let html = `<div class="px-5 pt-6"><h2 class="text-2xl font-semibold mb-4">Чаты</h2>`;
+    matches.forEach(u => {
+        html += `<div onclick="startChat(${u.id})" class="glass p-4 mb-3 flex gap-4 rounded-3xl cursor-pointer"><img src="${u.photo}" class="w-12 h-12 rounded-2xl"><div><div class="font-semibold">${u.name}</div><div class="text-sm text-zinc-400">Нажмите для чата</div></div></div>`;
     });
-
-    container.appendChild(card);
-}
-
-function likeUser() {
-    const user = fakeUsers[currentSwipeIndex];
-    if (!user) return;
-
-    if (!likes.includes(user.id)) likes.push(user.id);
-
-    if (Math.random() < 0.45 && !matches.find(m => m.id === user.id)) {
-        matches.push(user);
-        showMatchPopup(user);
-    } else {
-        showToast(`❤️ Ты лайкнул(а) ${user.name}`);
-        nextSwipeCard();
-    }
-    saveData();
-}
-
-function passUser() {
-    showToast('Пропущено');
-    nextSwipeCard();
-}
-
-function nextSwipeCard() {
-    currentSwipeIndex = (currentSwipeIndex + 1) % fakeUsers.length;
-    renderSwipeCards();
-}
-
-function showMatchPopup(user) {
-    const popup = document.createElement('div');
-    popup.className = 'fixed inset-0 bg-black/90 flex items-center justify-center z-[100000]';
-    popup.innerHTML = `
-        <div class="text-center px-6">
-            <div class="text-7xl mb-4">🎉</div>
-            <h2 class="text-4xl font-bold mb-2">Это матч!</h2>
-            <p class="text-xl text-zinc-300">Вы понравились друг другу</p>
-            
-            <div class="flex justify-center gap-4 my-8">
-                <img src="${currentUser.avatar}" class="w-24 h-24 rounded-3xl ring-4 ring-purple-500">
-                <img src="${user.photo}" class="w-24 h-24 rounded-3xl ring-4 ring-pink-500">
-            </div>
-
-            <div class="flex gap-4 justify-center">
-                <button onclick="startChat(${user.id}); this.closest('.fixed').remove()" 
-                        class="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl font-semibold">
-                    Написать
-                </button>
-                <button onclick="this.closest('.fixed').remove(); nextSwipeCard()" 
-                        class="px-8 py-4 border border-white/30 rounded-2xl font-semibold">
-                    Продолжить
-                </button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(popup);
-}
-
-function showToast(msg) {
-    const t = document.createElement('div');
-    t.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#1f1f2b;color:white;padding:14px 24px;border-radius:9999px;z-index:99999;';
-    t.textContent = msg;
-    document.body.appendChild(t);
-    setTimeout(() => t.remove(), 1800);
+    container.innerHTML = html + `</div>`;
 }
 
 function startChat(userId) {
-    alert('Чат будет добавлен на следующем шаге');
+    currentChatUser = matches.find(u => u.id === userId) || fakeUsers.find(u => u.id === userId);
+    if (!currentChatUser) return;
+
+    const container = document.getElementById('main-content');
+    container.innerHTML = `
+        <div>
+            <div class="px-4 py-3 border-b flex items-center gap-3 bg-[#0a0a0f]">
+                <button onclick="switchTab('messages')" class="text-2xl">←</button>
+                <img src="${currentChatUser.photo}" class="w-10 h-10 rounded-full">
+                <div class="font-semibold">${currentChatUser.name}</div>
+            </div>
+            <div id="chat-messages" class="p-4 h-[60vh] overflow-y-auto"></div>
+            <div class="p-4 border-t flex gap-2">
+                <input id="chat-input" class="flex-1 bg-zinc-900 rounded-2xl px-4 py-3" placeholder="Сообщение..." onkeypress="if(event.key==='Enter') sendMessage()">
+                <button onclick="sendMessage()" class="bg-purple-600 px-5 rounded-2xl">➤</button>
+            </div>
+        </div>`;
+    renderChatMessages();
 }
 
-function sortByCompatibility() {
-    showToast('AI подобрал лучших для тебя!');
+function renderChatMessages() {
+    const el = document.getElementById('chat-messages');
+    if (!el || !currentChatUser) return;
+    const msgs = chatMessages[currentChatUser.id] || [];
+    el.innerHTML = msgs.map(m => `<div class="${m.fromMe ? 'text-right' : ''} mb-2"><span class="inline-block px-4 py-2 rounded-2xl ${m.fromMe ? 'bg-purple-600' : 'bg-zinc-800'}">${m.text}</span></div>`).join('');
+    el.scrollTop = el.scrollHeight;
 }
 
-window.onload = () => {
-    updateProfileUI();
-};
+function sendMessage() {
+    const input = document.getElementById('chat-input');
+    if (!input || !currentChatUser) return;
+    const text = input.value.trim();
+    if (!text) return;
+
+    if (!chatMessages[currentChatUser.id]) chatMessages[currentChatUser.id] = [];
+    chatMessages[currentChatUser.id].push({ text, fromMe: true, time: new Date().toLocaleTimeString() });
+    saveData();
+    renderChatMessages();
+    input.value = '';
+
+    setTimeout(() => {
+        chatMessages[currentChatUser.id].push({ text: "Круто! Расскажи больше 😊", fromMe: false, time: new Date().toLocaleTimeString() });
+        saveData();
+        renderChatMessages();
+    }, 1000);
+}
+
+// === AI LOVE COACH ===
+function renderAILoveCoach() {
+    const container = document.getElementById('main-content');
+    container.innerHTML = `
+        <div class="p-5">
+            <h2 class="text-2xl font-semibold mb-4">AI Love Coach</h2>
+            <div id="ai-chat" class="h-[50vh] overflow-y-auto glass p-4 rounded-3xl mb-4"></div>
+            <div class="flex gap-2">
+                <input id="ai-input" class="flex-1 bg-zinc-900 rounded-2xl px-4 py-3" placeholder="Задай вопрос...">
+                <button onclick="sendToAI()" class="bg-purple-600 px-6 rounded-2xl">→</button>
+            </div>
+        </div>`;
+    renderAIChat();
+}
+
+function renderAIChat() {
+    const el = document.getElementById('ai-chat');
+    if (!el) return;
+    el.innerHTML = aiConversation.map(m => `<div class="mb-3 ${m.fromUser ? 'text-right' : ''}"><span class="px-4 py-2 rounded-2xl inline-block ${m.fromUser ? 'bg-purple-600' : 'bg-zinc-800'}">${m.text}</span></div>`).join('');
+}
+
+function sendToAI() {
+    const input = document.getElementById('ai-input');
+    if (!input || !input.value.trim()) return;
+
+    aiConversation.push({ text: input.value.trim(), fromUser: true, time: new Date().toLocaleTimeString() });
+    renderAIChat();
+    input.value = '';
+
+    setTimeout(() => {
+        const reply = "Я понимаю. Что именно тебя беспокоит?";
+        aiConversation.push({ text: reply, fromUser: false, time: new Date().toLocaleTimeString() });
+        saveData();
+        renderAIChat();
+    }, 1200);
+}
+
+// Для теста можно вызвать в консоли: renderAILoveCoach()
